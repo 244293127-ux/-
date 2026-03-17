@@ -382,7 +382,38 @@ export default function ChatPage() {
     setFrozenTotal({ total: clamp(60 + rounds * 4 + Math.floor(Math.random() * 6), 60, 79), danger: false });
   }, [showReportModal, frozenTotal, userMessageCount, narrationTriggered, isBlocked]);
 
-  const handleAgain = () => window.location.reload();
+  const resetSession = useCallback(() => {
+    // stop timers
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+    if (delayedTimerRef.current) {
+      clearTimeout(delayedTimerRef.current);
+      delayedTimerRef.current = null;
+    }
+
+    // reset core states
+    setMessages([{ id: 'init', kind: 'bubble', role: 'assistant', content: '滴滴，初次见面～' }]);
+    setInputValue('');
+    setLoading(false);
+    setDelayedTyping(false);
+
+    setCountdown(120);
+    setTimeOver(false);
+    setShowReportModal(false);
+
+    setFrozenReport(null);
+    setFrozenTotal(null);
+
+    setNarrationTriggered(false);
+    setOffenseCount(0);
+    setIsBlocked(false);
+
+    scrollToBottom();
+  }, [scrollToBottom]);
+
+  const handleAgain = () => resetSession();
 
   return (
     <div className="min-h-screen bg-brand-bg flex flex-col items-center py-4 px-2 text-brand-text">
