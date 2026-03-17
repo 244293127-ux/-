@@ -44,6 +44,14 @@ export function saveProfile(profile) {
   }
 }
 
+export function clearProfile() {
+  try {
+    localStorage.removeItem(KEY_PROFILE);
+  } catch {
+    // ignore
+  }
+}
+
 export function loadTags() {
   try {
     const raw = localStorage.getItem(KEY_TAGS);
@@ -56,6 +64,14 @@ export function loadTags() {
 export function saveTags(tagsPayload) {
   try {
     localStorage.setItem(KEY_TAGS, JSON.stringify(tagsPayload));
+  } catch {
+    // ignore
+  }
+}
+
+export function clearTags() {
+  try {
+    localStorage.removeItem(KEY_TAGS);
   } catch {
     // ignore
   }

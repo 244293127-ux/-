@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../components/Toast.jsx';
-import { loadDraft, saveDraft, saveProfile } from '../lib/storage.js';
+import { clearDraft, clearProfile, clearTags, loadDraft, saveDraft, saveProfile } from '../lib/storage.js';
 
 const BASIC_OPTIONS = {
   mbti: ['INTJ', 'INTP', 'ENTJ', 'ENTP', 'INFJ', 'INFP', 'ENFJ', 'ENFP', 'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ', 'ISTP', 'ISFP', 'ESTP', 'ESFP'],
@@ -197,6 +197,21 @@ export default function CustomizeAvatar() {
     setTransitionOpen(true);
   };
 
+  const handleReset = () => {
+    setTransitionOpen(false);
+    clearDraft();
+    clearProfile();
+    clearTags();
+    setBasic({ mbti: [], zodiac: [], city: [], age: [] });
+    setSocialMode(null);
+    setSchool({ degree: '', university: '', major: '' });
+    setWork({ industry: '' });
+    setHobbies([]);
+    setPersonality([]);
+    setLove([]);
+    toast.show('已为你清空选择，重新开始吧～');
+  };
+
   const enterAsPursuer = () => {
     setTransitionOpen(false);
     nav('/chat');
@@ -206,7 +221,16 @@ export default function CustomizeAvatar() {
     <div className="min-h-screen bg-brand-bg">
       <div className="mx-auto w-full max-w-md px-4 pt-8 pb-28">
         <header className="mb-6">
-          <h1 className="text-2xl font-bold text-brand-text tracking-tight">定制你的专属 AI 分身</h1>
+          <div className="flex items-start justify-between gap-3">
+            <h1 className="text-2xl font-bold text-brand-text tracking-tight">定制你的专属 AI 分身</h1>
+            <button
+              type="button"
+              onClick={handleReset}
+              className="mt-1 shrink-0 rounded-full border border-brand-primary/60 bg-white/70 px-3 py-1.5 text-xs font-medium text-brand-text hover:bg-white active:opacity-95"
+            >
+              重新开始
+            </button>
+          </div>
           <p className="mt-3 text-brand-text leading-relaxed">
             选几个懂你的标签，生成你的专属 AI 替身。<span className="text-brand-muted">（最少选 3 个板块）</span>
           </p>
