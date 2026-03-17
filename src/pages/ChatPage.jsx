@@ -452,8 +452,8 @@ export default function ChatPage() {
 
   return (
     <div className="bg-brand-bg text-brand-text h-[100vh]">
-      <div className="h-[100vh] w-full flex flex-col bg-brand-bg sm:max-w-md sm:mx-auto sm:my-4 sm:h-[calc(100vh-2rem)] sm:rounded-2xl sm:shadow-xl sm:overflow-hidden sm:border sm:border-brand-primary/55">
-        <header className="flex-shrink-0 flex items-center justify-between px-4 py-3 bg-brand-bg border-b border-brand-primary/55 pt-[max(0.75rem,env(safe-area-inset-top))]">
+      <div className="h-[100vh] w-full flex flex-col bg-brand-bg overflow-hidden sm:max-w-md sm:mx-auto sm:my-4 sm:h-[calc(100vh-2rem)] sm:rounded-2xl sm:shadow-xl sm:overflow-hidden sm:border sm:border-brand-primary/55">
+        <header className="sticky top-0 z-20 flex-shrink-0 flex items-center justify-between px-4 py-3 bg-brand-bg/95 backdrop-blur border-b border-brand-primary/55 pt-[max(0.75rem,env(safe-area-inset-top))]">
           <button
             type="button"
             onClick={() => nav('/')}
