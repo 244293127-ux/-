@@ -417,9 +417,9 @@ export default function ChatPage() {
   const handleAgain = () => resetSession();
 
   return (
-    <div className="min-h-screen bg-brand-bg flex flex-col items-center py-4 px-2 text-brand-text">
-      <div className="w-full max-w-md flex flex-col rounded-2xl shadow-xl overflow-hidden bg-brand-bg border border-brand-primary/55 min-h-[85vh]">
-        <header className="flex-shrink-0 flex items-center justify-between px-4 py-3 bg-brand-bg border-b border-brand-primary/55">
+    <div className="h-[100dvh] bg-brand-bg text-brand-text">
+      <div className="h-[100dvh] w-full flex flex-col bg-brand-bg sm:max-w-md sm:mx-auto sm:my-4 sm:h-[calc(100dvh-2rem)] sm:rounded-2xl sm:shadow-xl sm:overflow-hidden sm:border sm:border-brand-primary/55">
+        <header className="flex-shrink-0 flex items-center justify-between px-4 py-3 bg-brand-bg border-b border-brand-primary/55 pt-[max(0.75rem,env(safe-area-inset-top))]">
           <button
             type="button"
             onClick={() => nav('/')}
@@ -448,7 +448,7 @@ export default function ChatPage() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-3 scroll-smooth">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-3 pb-5 space-y-3 scroll-smooth">
           {messages.map((msg) => {
             if (msg.kind === 'system') {
               return (
@@ -490,7 +490,7 @@ export default function ChatPage() {
           <div ref={chatEndRef} />
         </main>
 
-        <footer className="flex-shrink-0 p-3 bg-brand-bg border-t border-brand-primary/55">
+        <footer className="flex-shrink-0 sticky bottom-0 p-3 bg-brand-bg border-t border-brand-primary/55 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <div className="flex gap-2">
             <input
               type="text"
