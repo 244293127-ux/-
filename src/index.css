@@ -6,6 +6,15 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html, body, #root {
+  height: 100%;
+  background: #F8FAF8;
+}
+
+body {
+  overscroll-behavior-y: none;
+}
+
 /* 爱心飘落动画 */
 @keyframes heart-fall {
   0% {

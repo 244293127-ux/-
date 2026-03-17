@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { COZE_CONFIG } from '../config.js';
 import { loadProfile } from '../lib/storage.js';
@@ -77,11 +77,44 @@ export default function ChatPage() {
   const chatEndRef = useRef(null);
   const countdownTimerRef = useRef(null);
   const delayedTimerRef = useRef(null);
+  const footerRef = useRef(null);
+  const [footerPx, setFooterPx] = useState(88);
+  const [avatarOk, setAvatarOk] = useState({ xiaoyi: true, user: true });
 
   const scrollToBottom = useCallback(() => {
     requestAnimationFrame(() => {
       chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     });
+  }, []);
+
+  useEffect(() => {
+    // iOS 键盘弹起时用 visualViewport 作为真实可视高度，避免输入栏被“顶飞”
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const set = () => {
+      const h = vv.height;
+      document.documentElement.style.setProperty('--vvh', `${h}px`);
+    };
+    set();
+    vv.addEventListener('resize', set);
+    vv.addEventListener('scroll', set);
+    return () => {
+      vv.removeEventListener('resize', set);
+      vv.removeEventListener('scroll', set);
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    const el = footerRef.current;
+    if (!el) return;
+    const measure = () => {
+      const rect = el.getBoundingClientRect();
+      if (rect.height) setFooterPx(Math.ceil(rect.height));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   useEffect(() => {
@@ -417,8 +450,8 @@ export default function ChatPage() {
   const handleAgain = () => resetSession();
 
   return (
-    <div className="h-[100dvh] bg-brand-bg text-brand-text">
-      <div className="h-[100dvh] w-full flex flex-col bg-brand-bg sm:max-w-md sm:mx-auto sm:my-4 sm:h-[calc(100dvh-2rem)] sm:rounded-2xl sm:shadow-xl sm:overflow-hidden sm:border sm:border-brand-primary/55">
+    <div className="bg-brand-bg text-brand-text" style={{ height: 'var(--vvh, 100dvh)' }}>
+      <div className="w-full flex flex-col bg-brand-bg sm:max-w-md sm:mx-auto sm:my-4 sm:rounded-2xl sm:shadow-xl sm:overflow-hidden sm:border sm:border-brand-primary/55" style={{ height: 'var(--vvh, 100dvh)' }}>
         <header className="flex-shrink-0 flex items-center justify-between px-4 py-3 bg-brand-bg border-b border-brand-primary/55 pt-[max(0.75rem,env(safe-area-inset-top))]">
           <button
             type="button"
@@ -448,7 +481,10 @@ export default function ChatPage() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-3 pb-5 space-y-3 scroll-smooth">
+        <main
+          className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-3 scroll-smooth"
+          style={{ paddingBottom: `calc(${footerPx}px + env(safe-area-inset-bottom))` }}
+        >
           {messages.map((msg) => {
             if (msg.kind === 'system') {
               return (
@@ -462,11 +498,27 @@ export default function ChatPage() {
 
             return (
               <div key={msg.id} className={`flex gap-2 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                <img
-                  src={msg.role === 'user' ? USER_AVATAR : XIAOYI_AVATAR}
-                  alt={msg.role === 'user' ? '我' : '小艺'}
-                  className="w-9 h-9 rounded-full flex-shrink-0 object-cover"
-                />
+                {msg.role === 'user' ? (
+                  avatarOk.user ? (
+                    <img
+                      src={USER_AVATAR}
+                      alt="我"
+                      className="w-9 h-9 rounded-full flex-shrink-0 object-cover"
+                      onError={() => setAvatarOk((p) => ({ ...p, user: false }))}
+                    />
+                  ) : (
+                    <AvatarFallback label="我" />
+                  )
+                ) : avatarOk.xiaoyi ? (
+                  <img
+                    src={XIAOYI_AVATAR}
+                    alt="小艺"
+                    className="w-9 h-9 rounded-full flex-shrink-0 object-cover"
+                    onError={() => setAvatarOk((p) => ({ ...p, xiaoyi: false }))}
+                  />
+                ) : (
+                  <AvatarFallback label="艺" />
+                )}
                 <div
                   className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
                     msg.isError
@@ -490,7 +542,11 @@ export default function ChatPage() {
           <div ref={chatEndRef} />
         </main>
 
-        <footer className="flex-shrink-0 sticky bottom-0 p-3 bg-brand-bg border-t border-brand-primary/55 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <footer
+          ref={footerRef}
+          className="flex-shrink-0 fixed left-0 right-0 bottom-0 p-3 bg-brand-bg border-t border-brand-primary/55 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:left-auto sm:right-auto sm:bottom-auto sm:static"
+          style={{ maxWidth: '28rem', margin: '0 auto' }}
+        >
           <div className="flex gap-2">
             <input
               type="text"
@@ -657,6 +713,14 @@ function Dot({ delay }) {
       className="w-1.5 h-1.5 rounded-full bg-brand-muted/60 animate-bounce"
       style={{ animationDelay: delay ?? '0ms' }}
     />
+  );
+}
+
+function AvatarFallback({ label }) {
+  return (
+    <div className="w-9 h-9 rounded-full flex-shrink-0 bg-white border border-brand-primary/50 text-brand-muted flex items-center justify-center text-sm font-semibold">
+      {label}
+    </div>
   );
 }
 
