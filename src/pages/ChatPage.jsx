@@ -227,13 +227,13 @@ export default function ChatPage() {
       }));
     historyForApi.push({ role: 'user', content: text, content_type: 'text' });
 
-    // 无论开发/生产，都走同域 /api/coze（生产由 Vercel Serverless 代理注入 PAT）
-    // 开发环境下，Vite 会把 /api/coze 代理到 api.coze.cn（见 vite.config.js）
-    const apiBase = '/api/coze';
+    // 开发环境走 Vite 代理 /api/coze，生产直连 Coze BASE
+    const apiBase = import.meta.env.DEV ? '/api/coze' : COZE_CONFIG.BASE;
     const cozeFetch = (path, opts = {}) =>
       fetch(`${apiBase}${path}`, {
         ...opts,
         headers: {
+          Authorization: `Bearer ${COZE_CONFIG.PAT}`,
           'Content-Type': 'application/json',
           ...opts.headers,
         },
