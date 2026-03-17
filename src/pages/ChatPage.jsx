@@ -79,6 +79,7 @@ export default function ChatPage() {
   const delayedTimerRef = useRef(null);
   const footerRef = useRef(null);
   const [footerPx, setFooterPx] = useState(88);
+  const [kbPx, setKbPx] = useState(0);
   const [avatarOk, setAvatarOk] = useState({ xiaoyi: true, user: true });
 
   const scrollToBottom = useCallback(() => {
@@ -88,19 +89,19 @@ export default function ChatPage() {
   }, []);
 
   useEffect(() => {
-    // iOS 键盘弹起时用 visualViewport 作为真实可视高度，避免输入栏被“顶飞”
+    // iOS/Android 键盘适配：计算键盘高度，只让输入栏跟随上移（不让整页“顶上去”）
     const vv = window.visualViewport;
     if (!vv) return;
-    const set = () => {
-      const h = vv.height;
-      document.documentElement.style.setProperty('--vvh', `${h}px`);
+    const update = () => {
+      const raw = Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0));
+      setKbPx(Math.round(raw));
     };
-    set();
-    vv.addEventListener('resize', set);
-    vv.addEventListener('scroll', set);
+    update();
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
     return () => {
-      vv.removeEventListener('resize', set);
-      vv.removeEventListener('scroll', set);
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
     };
   }, []);
 
@@ -450,8 +451,8 @@ export default function ChatPage() {
   const handleAgain = () => resetSession();
 
   return (
-    <div className="bg-brand-bg text-brand-text" style={{ height: 'var(--vvh, 100dvh)' }}>
-      <div className="w-full flex flex-col bg-brand-bg sm:max-w-md sm:mx-auto sm:my-4 sm:rounded-2xl sm:shadow-xl sm:overflow-hidden sm:border sm:border-brand-primary/55" style={{ height: 'var(--vvh, 100dvh)' }}>
+    <div className="bg-brand-bg text-brand-text h-[100vh]">
+      <div className="h-[100vh] w-full flex flex-col bg-brand-bg sm:max-w-md sm:mx-auto sm:my-4 sm:h-[calc(100vh-2rem)] sm:rounded-2xl sm:shadow-xl sm:overflow-hidden sm:border sm:border-brand-primary/55">
         <header className="flex-shrink-0 flex items-center justify-between px-4 py-3 bg-brand-bg border-b border-brand-primary/55 pt-[max(0.75rem,env(safe-area-inset-top))]">
           <button
             type="button"
@@ -483,7 +484,7 @@ export default function ChatPage() {
 
         <main
           className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-3 scroll-smooth"
-          style={{ paddingBottom: `calc(${footerPx}px + env(safe-area-inset-bottom))` }}
+          style={{ paddingBottom: `${footerPx + kbPx}px` }}
         >
           {messages.map((msg) => {
             if (msg.kind === 'system') {
@@ -544,27 +545,35 @@ export default function ChatPage() {
 
         <footer
           ref={footerRef}
-          className="flex-shrink-0 fixed left-0 right-0 bottom-0 p-3 bg-brand-bg border-t border-brand-primary/55 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:left-auto sm:right-auto sm:bottom-auto sm:static"
-          style={{ maxWidth: '28rem', margin: '0 auto' }}
+          className="flex-shrink-0 fixed left-0 right-0 bottom-0 border-t border-brand-primary/55"
+          style={{
+            transform: kbPx ? `translateY(-${kbPx}px)` : undefined,
+            willChange: 'transform',
+            background: 'transparent',
+          }}
         >
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-              placeholder={isBlocked ? '对方已开启了好友验证...' : timeOver ? '本局已结束～' : '说点什么...'}
-              disabled={timeOver || isBlocked}
-              className="flex-1 rounded-full border border-brand-primary/60 bg-white px-4 py-2.5 text-brand-text placeholder-brand-muted focus:outline-none focus:ring-2 focus:ring-brand-primary/70 disabled:opacity-60"
-            />
-            <button
-              type="button"
-              onClick={sendMessage}
-              disabled={loading || delayedTyping || timeOver || isBlocked || !inputValue.trim()}
-              className="rounded-full bg-brand-primary text-brand-text px-5 py-2.5 font-semibold disabled:opacity-50 disabled:cursor-not-allowed active:opacity-90"
-            >
-              发送
-            </button>
+          <div className="bg-brand-bg/95 backdrop-blur px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <div className="sm:max-w-md sm:mx-auto">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                  placeholder={isBlocked ? '对方已开启了好友验证...' : timeOver ? '本局已结束～' : '说点什么...'}
+                  disabled={timeOver || isBlocked}
+                  className="flex-1 rounded-full border border-brand-primary/60 bg-white px-4 py-2.5 text-brand-text placeholder-brand-muted focus:outline-none focus:ring-2 focus:ring-brand-primary/70 disabled:opacity-60"
+                />
+                <button
+                  type="button"
+                  onClick={sendMessage}
+                  disabled={loading || delayedTyping || timeOver || isBlocked || !inputValue.trim()}
+                  className="rounded-full bg-brand-primary text-brand-text px-5 py-2.5 font-semibold disabled:opacity-50 disabled:cursor-not-allowed active:opacity-90"
+                >
+                  发送
+                </button>
+              </div>
+            </div>
           </div>
         </footer>
       </div>
